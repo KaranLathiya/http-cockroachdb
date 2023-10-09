@@ -12,6 +12,16 @@ Clone the project
   git clone https://github.com/KaranLathiya/http-cockroachdb.git
 ```
 
+Install Go version 1.21
+
+```bash
+  go install 1.21 
+```
+Install Cockroachdb on local machine
+
+Read the migration.sql  
+
+
 
 Install dependencies
 
@@ -39,19 +49,19 @@ To deploy this project run
 
 To add new user details  --POST
 
-    http://localhost:8080/add
+    http://localhost:8080/user/add
 To see all user details --GET
 
-    http://localhost:8080/details
+    http://localhost:8080/alluserdetails
 To see user details with specific ID --GET
 
-    http://localhost:8080/idDetail
+    http://localhost:8080/user/details
 To delete user details with specific ID --DELETE
 
-    http://localhost:8080/delete
+    http://localhost:8080/user/delete
 To update user details with specific ID --PUT
 
-    http://localhost:8080/update
+    http://localhost:8080/user/update
 ## Table Details
 
 
@@ -61,3 +71,9 @@ To update user details with specific ID --PUT
 |  name        | STRING    |      f      | NULL                                     |                       | {accounts_name_key,accounts_pkey} |     f  |
 |  created_at  | TIMESTAMP |      f      | NULL                                     |                       | {accounts_pkey}                   |     f  |
 |  updated_at  | TIMESTAMP |      f      | NULL                                     |                       | {accounts_pkey}                   |     f  |
+
+
+
+|Sequence name|Create Statement |
+|--------------|----------------------------------------------------- |
+| id_increment	|CREATE SEQUENCE public.id_increment MINVALUE 1 MAXVALUE 9223372036854775807 INCREMENT 1 START 1 |
