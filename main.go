@@ -20,10 +20,10 @@ var db *sql.DB
 var err error = nil
 
 type User struct {
-	Id         int    `json:"id"`
-	Name       string `json:"name"`
-	Created_at string `json:"created_at"`
-	Updated_at string `json:"updated_at"`
+	Id         int        `json:"id"`
+	Name       string     `json:"name"`
+	Created_at *time.Time `json:"created_at,omitempty"`
+	Updated_at time.Time  `json:"updated_at"`
 }
 
 func main() {
@@ -89,16 +89,22 @@ func AllUserDetails(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, err)
 		return
 	}
-	var user1 User
+	var user1 []User
 	defer rows.Close()
-	fmt.Fprint(w, "\nID\t\tNAME\t\t\t\tcreated_at\t\t\t\t\tupdated_at\n")
+	// fmt.Fprint(w, "\nID\t\tNAME\t\t\t\tcreated_at\t\t\t\t\tupdated_at\n")
+	i := 0
 	for rows.Next() {
-		if err := rows.Scan(&user1.Id, &user1.Name, &user1.Created_at, &user1.Updated_at); err != nil {
+		newUser := User{}
+		user1 = append(user1, newUser)
+		if err := rows.Scan(&user1[i].Id, &user1[i].Name, &user1[i].Created_at, &user1[i].Updated_at); err != nil {
 			fmt.Fprint(w, err)
 			return
 		}
-		fmt.Fprintf(w, "%v\t|%-20v\t|%-20v\t|%-20v\n", user1.Id, user1.Name, user1.Created_at, user1.Updated_at)
+		i += 1
+		// fmt.Fprintf(w, "%v\t|%-20v\t|%-20v\t|%-20v\n", user1.Id, user1.Name, user1.Created_at, user1.Updated_at)
 	}
+	updated_data, _ := json.MarshalIndent(user1[:], "", "  ")
+	fmt.Fprintf(w, string(updated_data[:]))
 	// tbl := table.New("ID", "Name", "CREATED_AT","UPDATED_AT")
 	// for rows.Next() {
 	// 	if err := rows.Scan(&id, &name,&created_at,&updated_at); err != nil {
@@ -123,7 +129,9 @@ func UserDetailsById(w http.ResponseWriter, r *http.Request) {
 	}
 	errIfNoRows := db.QueryRow("select name,created_at,updated_at from accounts where id=$1", user1.Id).Scan(&user1.Name, &user1.Created_at, &user1.Updated_at)
 	if errIfNoRows == nil {
-		fmt.Fprintf(w, "id = %v \n name = %v \n created_at = %v \n updated_at = %v \n ", user1.Id, user1.Name, user1.Created_at, user1.Updated_at)
+		updated_data, _ := json.MarshalIndent(user1, "", "  ")
+		fmt.Fprintf(w, string(updated_data[:]))
+		// fmt.Fprintf(w, "id = %v \n name = %v \n created_at = %v \n updated_at = %v \n ", user1.Id, user1.Name, user1.Created_at, user1.Updated_at)
 	} else {
 		fmt.Fprintf(w, "%v id doesn't exist.", user1.Id)
 	}
@@ -170,11 +178,8 @@ func UpdateUserDetails(w http.ResponseWriter, r *http.Request) {
 	}
 	var user1 User
 	json.Unmarshal(body, &user1)
-	if r.Method != "POST" {
-		fmt.Fprintf(w, "Invalid method")
-		return
-	}
-	// fmt.Println(id)
+	user1.Created_at = nil
+	user1.Updated_at = time.Now()
 	result, err := db.Exec(
 		"update accounts set name =$1,updated_at=$3 where id=$2", user1.Name, user1.Id, time.Now())
 	if err != nil {
@@ -187,7 +192,10 @@ func UpdateUserDetails(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if RowsAffected == 1 {
-		fmt.Fprintf(w, "Data of id %v is Successfully updated", user1.Id)
+		updated_data, _ := json.MarshalIndent(user1, "", "  ")
+		fmt.Fprintf(w, string(updated_data))
+		// fmt.Fprintf(w, "Data of id %v is Successfully updated", user1.Id)
+
 	} else {
 		fmt.Fprintf(w, "%v id doesn't exist.", user1.Id)
 	}
